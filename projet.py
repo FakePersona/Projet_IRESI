@@ -23,30 +23,13 @@ def cod(X, Y):
     
     
 
-
-def random_split(X, Y, k):
-    if len(X) != len(Y):
-        return [], []
-        
-    ind = [random.randint(0, k-1) for _ in range(len(X))]
-    Xk = [[] for _ in range(k)]
-    Yk = [[] for _ in range(k)]
     
-    for i in range(len(X)):
-        Xk[ind[i]].append(X[i])
-        Yk[ind[i]].append(Y[i])
-        
-    return Xk, Yk
-    
-    
-
-    
-def sketch_cod(X, Y, k, delta):
+def sketch_cod(X, Y, k, delta):#wip
     min_cod = float('inf')
     t = int(math.log(1/delta))
     print(t)
     for _ in range(t):
-        Xk, Yk = random_split(X, Y, k)
+        Xk, Yk = hash_split(X, Y, k)
         sX = [sum_array(x) for x in Xk]
         sY = [sum_array(y) for y in Yk]
         
@@ -113,8 +96,40 @@ def parseFile(path):
         data.append(epahttp(line))
     return data
     
+    
+    
+def h(a, x):
+    M = 4
+    w = 32
+    return (a*x) % (1 << w) >> (w - M)
+    
+
+def hash_split(X, Y, k): #Modify with hash
+    if len(X) != len(Y):
+        return [], []
+        
+    ind = [random.randint(0, k-1) for _ in range(len(X))]
+    Xk = [[] for _ in range(k)]
+    Yk = [[] for _ in range(k)]
+    
+    for i in range(len(X)):
+        Xk[ind[i]].append(X[i])
+        Yk[ind[i]].append(Y[i])
+        
+    return Xk, Yk
+    
+    
+        
+def count_min_sketch(X, Y, k, delta):
+    Xk, Yk = hash_split(X,Y,k)
+    
+    
+X = [random.randint(0, 1 << 32 -1) for i in range(100)]
+a = random.randint(0, 1 << 32 -1)
+print(X)
+print([h(a, x) for x in X])
+    
 print(sketch_cod([43,12,911,85,76,12,36,77], [83,73,89,326,82,245,78,97], 5, .0001))
         
 # data = parseFile("1epahttp.txt")
             
-print(hashlib.sha224(b"test").hexdigest())
