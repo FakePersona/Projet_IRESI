@@ -1,0 +1,7 @@
+
+
+def avg(X):
+    s = 0
+    for x in X:
+        s += x
+    return s/len(X)
