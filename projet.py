@@ -2,17 +2,19 @@ import hashlib
 import random
 import math
 
+# This function sums every element of an array
 def sum_array(X):
     s = 0
     for x in X:
         s += x
     return s
 
+# This function creates the everage of the lement af array X
 def avg(X):
     return sum_array(X)/len(X)
     
     
-    
+# This calculates the codeviance between two arrays
 def cod(X, Y):
     if len(X) != len(Y):
         return 0
@@ -23,7 +25,6 @@ def cod(X, Y):
     
     
 
-    
 def sketch_cod(X, Y, k, delta):#wip
     min_cod = float('inf')
     t = int(math.log(1/delta))
@@ -38,7 +39,6 @@ def sketch_cod(X, Y, k, delta):#wip
         
     return min_cod
 
-    
     
 class epahttp:
     def __init__(self, string):
@@ -102,6 +102,7 @@ def h(a, x):
     M = 4
     w = 32
     return (a*x) % (1 << w) >> (w - M)
+
     
 
 def hash_split(X, Y, k): #Modify with hash
@@ -120,9 +121,6 @@ def hash_split(X, Y, k): #Modify with hash
     
     
         
-def count_min_sketch(X, Y, k, delta):
-    Xk, Yk = hash_split(X,Y,k)
-    
     
 X = [random.randint(0, 1 << 32 -1) for i in range(100)]
 a = random.randint(0, 1 << 32 -1)
