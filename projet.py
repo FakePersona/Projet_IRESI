@@ -24,20 +24,47 @@ def cod(X, Y):
     return avg(Z) - avg(X)*avg(Y)
     
     
-
+# This calculates the codeviance between two streams
 def sketch_cod(X, Y, k, delta):#wip
     min_cod = float('inf')
     t = int(math.log(1/delta))
     print(t)
     for _ in range(t):
-        Xk, Yk = hash_split(X, Y, k)
+        Xk, Yk = hash_split(X, Y, k)# a hash function should be argument here
         sX = [sum_array(x) for x in Xk]
         sY = [sum_array(y) for y in Yk]
-        
-        
         min_cod = min(min_cod, cod(sX, sY))
-        
     return min_cod
+
+# This finds out how many rounds the algorithm will take
+def find_r(d, length):
+    t = True
+    r=0
+    s=d
+    while t:
+       if d < length:
+           r+=1
+           s+=(2**r)*d
+       else:
+           t = False
+    return r
+
+# This calculates a sketch between a set of streams
+def count_min(X,delta,k,d):
+    cod_mat = [[0 for i in range(k)] for j in range(k)] # We should intialize a hash function somewhere 'round here
+    X1 = [[(X[i])[j] for j in range(d)] for i in range(len(X))]
+    l = d
+    for i in range(k):                  # That would be the first round
+        for j in range(k):
+            (cod_mat[i])[j] = sketch_cod(X1[i],X1[j], k, delta)
+    for r in range(find_r(d, len(X[0]))): # We be iteratin' now!
+        X_int = [[(X[i])[l+j] for j in range((2**(r+1))*d)] for i in range(len(X))]
+        l += (2**(r+1))*d
+        cod_temp = [[(cod_mat[i])[j] for i in range(k)] for j in range(k)]
+        for i in range(k):   
+            for j in range(k):
+                (cod_mat[i])[j] = min(sketch_cod(X_int[i],X_int[j], k, delta), (cod_temp[i])[j])
+    return cod_mat
 
     
 class epahttp:
