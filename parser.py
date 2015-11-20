@@ -98,7 +98,7 @@ def parseString(string, t):
 # Returns a list. Each element of the list is a re.match object, representing a line of the file.
 # Use "group" method to access to items 
 #
-# ex : to access to the day (D) of the 42nd line :
+# ex : to access to the day (D) of the 42nd line of the file "toto.txt", using "epahttp" syntax :
 # data = parseFile("toto.txt", "epahttp")
 # data[42].group("D") 
 def parseFile(path, t):

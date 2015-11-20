@@ -1,0 +1,25 @@
+import random
+
+# A class to handle a hash function.
+# w is the number of bits in a machine word. 
+# The hash result will be in [0, (2^M)-1]
+#
+# ex :
+# h = Hash(32, 4)
+# h(42)
+#
+# source : https://en.wikipedia.org/wiki/Universal_hashing#Avoiding_modular_arithmetic
+class Hash:
+    def __init__(self, w, M):
+        self.w = w
+        self.M = M
+        self.a = random.randint(1, 1 << w)
+        self.b = random.randint(1, 1 << (w-M))
+        
+    def __call__(self, x):
+        return ((a*x+b) % (1 << w)) // (1 << (w-M))
+
+h = Hash(32, 4)
+
+for i in range(100):
+    print(str(i) + ' -> ' + str(h(i)))

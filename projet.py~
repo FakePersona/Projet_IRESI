@@ -130,7 +130,7 @@ def h(a, x):
     w = 32
     return (a*x) % (1 << w) >> (w - M)
 
-
+    
 
 def hash_split(X, Y, k): #Modify with hash
     if len(X) != len(Y):
