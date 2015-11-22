@@ -1,6 +1,8 @@
 import hashlib
 import random
 import math
+import hash_rand
+import parser
 
 # This function sums every element of an array
 def sum_array(X):
@@ -15,25 +17,55 @@ def avg(X):
     
     
 # This calculates the codeviance between two arrays
-def cod(X, Y):
+def cod(X, Y,max):
     if len(X) != len(Y):
         return 0
-    
+    X1 = [0 for i in range(max)]        # Let's create frequency vectors
+    Y1 = [0 for i in range(max)]
+    for i in range(len(X1)):
+        X1[X[i]]+=1
+        Y1[X[i]]+=1
+    Z = [X1[i]*Y1[i] for i in range(len(X1))] # Then we compute the metrics to get the codeviance
+    return avg(Z) - avg(X1)*avg(Y1)
+
+# Same thing except we assume X and Y are frequency vectors
+def cod_int(X, Y):
+    if len(X) != len(Y):
+        return 0
     Z = [X[i]*Y[i] for i in range(len(X))]
-    
     return avg(Z) - avg(X)*avg(Y)
     
     
 # This calculates the codeviance between two streams
 def sketch_cod(X, Y, k, delta):#wip
     min_cod = float('inf')
-    t = int(math.log(1/delta))
-    print(t)
+    X1 = [0 for i in range(len(X))]
+    Y1 = [0 for i in range(len(X))]
+    for i in range(len(X1)):
+        X1[X[i]]+=1
+        Y1[X[i]]+=1
+    t = int(math.log(1/delta)) + 1
     for _ in range(t):
-        Xk, Yk = hash_split(X, Y, k)# a hash function should be argument here
+        h = hash_rand.Hash(32, int(math.log(k,2)))
+        Xk, Yk = hash_split(X1, Y1, h, k)
         sX = [sum_array(x) for x in Xk]
         sY = [sum_array(y) for y in Yk]
-        min_cod = min(min_cod, cod(sX, sY))
+        min_cod = min(min_cod, cod_int(sX, sY))
+    return min_cod
+
+def sketch_int(X, Y, k, delta, h):#wip
+    min_cod = float('inf')
+    X1 = [0 for i in range(len(X))]
+    Y1 = [0 for i in range(len(X))]
+    for i in range(len(X1)):
+        X1[X[i]]+=1
+        Y1[X[i]]+=1
+    t = int(math.log(1/delta)) + 1
+    for j in range(t):
+        Xk, Yk = hash_split(X, Y, h[j], k)
+        sX = [sum_array(x) for x in Xk]
+        sY = [sum_array(y) for y in Yk]
+        min_cod = min(min_cod, cod_int(sX, sY))
     return min_cod
 
 # This finds out how many rounds the algorithm will take
@@ -42,119 +74,81 @@ def find_r(d, length):
     r=0
     s=d
     while t:
-       if d < length:
+       if s < length:
            r+=1
-           s+=(2**r)*d
+           s+=(2**r)*s
        else:
+           r-=1
            t = False
     return r
 
 # This calculates a sketch between a set of streams
 def count_min(X,delta,k,d):
-    cod_mat = [[0 for i in range(k)] for j in range(k)] # We should intialize a hash function somewhere 'round here
+    cod_mat = [[0 for i in range(len(X))] for j in range(len(X))]
     X1 = [[(X[i])[j] for j in range(d)] for i in range(len(X))]
     l = d
-    for i in range(k):                  # That would be the first round
-        for j in range(k):
-            (cod_mat[i])[j] = sketch_cod(X1[i],X1[j], k, delta)
-    for r in range(find_r(d, len(X[0]))): # We be iteratin' now!
+    h = [hash_rand.Hash(32, int(math.log(k,2))) for _ in range(int(math.log(1/delta))+1)]
+    for i in range(len(X)):                  # That would be the first round
+        for j in range(len(X)):
+            (cod_mat[i])[j] = sketch_int(X1[i],X1[j], k, delta, h)
+    for r in range(find_r(d, len(min(X[0],X[1])))): # We be iteratin' now!
         X_int = [[(X[i])[l+j] for j in range((2**(r+1))*d)] for i in range(len(X))]
         l += (2**(r+1))*d
-        cod_temp = [[(cod_mat[i])[j] for i in range(k)] for j in range(k)]
-        for i in range(k):   
-            for j in range(k):
-                (cod_mat[i])[j] = min(sketch_cod(X_int[i],X_int[j], k, delta), (cod_temp[i])[j])
+        cod_temp = [[(cod_mat[i])[j] for i in range(len(X))] for j in range(len(X))]
+        for i in range(len(X)):   
+            for j in range(len(X)):
+                (cod_mat[i])[j] = min(sketch_int(X_int[i],X_int[j], k, delta,h), (cod_temp[i])[j])
     return cod_mat
 
     
-class epahttp:
-    def __init__(self, string):
-        self.parse(string)
-        
-    def parse(self, s):
-        self.host = ""
-        self.D = 0
-        self.H = 0
-        self.M = 0
-        self.S = 0
-        self.request = ""
-        self.code = 0
-        self.size = 0
-        
-        c = 0
-        
-        while s[c] != ' ':
-            self.host += s[c]
-            c += 1
-        
-        while s[c] != '[':
-            c += 1
-        
-        self.D = int(s[c+1:c+3])
-        self.H = int(s[c+4:c+6])
-        self.M = int(s[c+7:c+9])
-        self.S = int(s[c+10:c+12])
-        
-        while s[c] != '"':
-            c += 1
-            
-        c += 1
-        while s[c] != '"':
-            self.request += s[c]
-            c += 1
-            
-        c += 2
-        s2 = ""
-        while s[c] != ' ':
-            s2 += s[c]
-            c += 1
-        try:
-            self.code = int(s2)
-            self.size = int(s[c:])
-        except ValueError:
-            ()
 
-
-
-def parseFile(path):
-    f = open(path)
-    data = []
-    for line in f:
-        data.append(epahttp(line))
-    return data
-    
-    
-    
-def h(a, x):
-    M = 4
-    w = 32
-    return (a*x) % (1 << w) >> (w - M)
-
-    
-
-def hash_split(X, Y, k): #Modify with hash
+def hash_split(X, Y, h, k):
     if len(X) != len(Y):
         return [], []
-        
-    ind = [random.randint(0, k-1) for _ in range(len(X))]
     Xk = [[] for _ in range(k)]
     Yk = [[] for _ in range(k)]
-    
     for i in range(len(X)):
-        Xk[ind[i]].append(X[i])
-        Yk[ind[i]].append(Y[i])
-        
+        Xk[h(i)].append(X[i])
+        Yk[h(i)].append(Y[i])
     return Xk, Yk
     
+def get_group(sample, i, s):
+    if sample[i] == None:
+        return 0
+    else:
+        return (sample[i].group(s))
+
+def belong(l,a):
+    for i in len(l):
+        if l[i] == a:
+            return i
+    return (-1)
+
+def distinct(l):
+    D=[]
+    for i in l:
+        if (belong(D,i))<0:
+            D.append(i)
+    return len(D)
+
+def make_standard(data, s):
+    D=[]
+    Used=[]
+    for i in len(data):
+        if belong(Used,get_group(data,i,s))<0:
+            Used.append(get_group(data,i,s))
+            D.append(len(D)+1)
+        else:
+            D.append(belong(Used,get_group(data,i,s)))
+    return D
     
-        
-    
-X = [random.randint(0, 1 << 32 -1) for i in range(100)]
-a = random.randint(0, 1 << 32 -1)
-print(X)
-print([h(a, x) for x in X])
-    
-print(sketch_cod([43,12,911,85,76,12,36,77], [83,73,89,326,82,245,78,97], 5, .0001))
-        
-# data = parseFile("1epahttp.txt")
-            
+data1 = parser.parseFile("1epahttp.txt","epahttp")
+data2 = parser.parseFile("2sdschttp2.txt","sdschttp")
+data3 = parser.parseFile("3Calgaryaccess_log.txt","calgaryhttp")         
+sample3 = [get_group(data3, i, "host") for i in range(25000)]
+sample1 = [get_group(data1, i, "host") for i in range(25000)]
+sample2 = [get_group(data2, i, "host") for i in range(25000)]
+print(sample1)
+#print(cod(sample2,sample1, 1000))
+#print(sketch_cod(sample1, sample2, 32, 0.0001))
+#print(count_min([sample1,sample2,sample3],0.000001,1024,25000))

@@ -100,7 +100,8 @@ def parseString(string, t):
 #
 # ex : to access to the day (D) of the 42nd line of the file "toto.txt", using "epahttp" syntax :
 # data = parseFile("toto.txt", "epahttp")
-# data[42].group("D") 
+# data[42].group("D")
+
 def parseFile(path, t):
     f = open(path)
     data = []
