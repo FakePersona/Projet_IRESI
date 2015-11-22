@@ -1,0 +1,191 @@
+\documentclass[a4paper,11pt]{article}%
+\usepackage{a4wide}%
+
+\usepackage[francais]{babel}%
+\usepackage[utf8]{inputenc}%
+\usepackage[T1]{fontenc}%
+
+\usepackage{graphicx}%
+\usepackage{xspace}%
+
+\usepackage{url} \urlstyle{sf}%
+\DeclareUrlCommand\email{\urlstyle{sf}}%
+
+\usepackage{mathpazo}%
+\let\bfseriesaux=\bfseries%
+\renewcommand{\bfseries}{\sffamily\bfseriesaux}
+
+\newenvironment{keywords}%
+{\description\item[Mots-clés.]}%
+{\enddescription}
+\usepackage{tabularx}
+
+\newenvironment{remarque}%
+{\description\item[Remarque.]\sl}%
+{\enddescription}
+
+\font\manual=manfnt
+\newcommand{\dbend}{{\manual\char127}}
+
+\newenvironment{attention}%
+{\description\item[\dbend]\sl}%
+{\enddescription}
+
+\usepackage{listings}%
+
+\lstset{%
+  basicstyle=\sffamily,%
+  columns=fullflexible,%
+  language=caml,%
+  frame=lb,%
+  frameround=fftf,%
+}%
+
+\lstMakeShortInline{|}
+
+\parskip=0.3\baselineskip%
+\sloppy%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\title{Approximation de la codéviance}
+
+\author{Rémi Hutin \and Rémy Sun}
+
+\date{23 Novembre 2015}
+
+\maketitle
+
+\begin{abstract}
+  Dans ce rapport, nous rendrons compte de l'implémentation en python de l'algorithme CM-sketch d'approximation de la codéviance, ainsi que de l'analyse statistique obtenue
+  en appliquant l'implémentation à un triplet de traces réelles.
+\begin{keywords}
+  Codéviance; CM-sketch
+\end{keywords}
+\end{abstract}
+
+\section{Outils de travail}
+\label{sec:outils}
+
+\subsection{Pourquoi Python?}
+
+\paragraph{Structure de liste/tableau}La structure de liste en python a la particularité de permettre directement l'accés à n'importe quel élément, ce qui permet une implémentation plus comfortable des vecteurs de fréquence.
+Inversement, on pourrait dire que les tableaux pythons ont une taille dynamique, ce qui est utile pour la ``standardisation'' de vecteurs.
+
+\paragraph{Beaucoup de fonctions natives}Python posséde beaucoup de bibliothéques évitant d'avoir à implémenter nous même des fonctions comme le logarithme
+
+\paragraph{Typage dynamique}Nous avons été ammenés à manipuler beaucoup de types différents, le typage python permet d'éviter des notations très lourde, ce qui aurait été le cas avec un langage fortement typé comme Ocaml.
+
+\subsection{Parsage des traces}
+
+\paragraph{}En l'état, les traces fournies sont difficiles à exploiter puisqu'il s'agit de lignes de textes (ce sont des logs). De fait, nous avonc écrit une fonction de parsage\newline
+en tirant avantage du fait que python supporte la reconnaissance d'expressions rationnelles. Par exemple, le typage du protocole epahttp est fourni ci-dessous:
+
+\begin{lstlisting}
+pattern["epahttp"] = re.compile("""
+(?P<host>.*)
+\s\[
+(?P<D>[0-9]*)
+:
+(?P<H>[0-9]*)
+:
+(?P<M>[0-9]*)
+:
+(?P<S>[0-9]*)
+\]\s"
+(?P<request>.*)
+"\s
+(?P<code>[0-9]*)
+\s
+(?P<size>[0-9]*)
+""", re.VERBOSE)
+\end{lstlisting}
+
+\paragraph{}A partir de cette définition, on peut poser une fonction parseFile qui crée un vecteur qui découpe chaque ligne en différents blocs correspondant à une information différente. Nous nous sommes interessé dans ce document\newline
+à l'adresse hôte (``host'')
+
+\subsection{Fonction de hachage 2-Universelle}
+
+\paragraph{}Il est nécessaire d'avoir une famille de fonctions de hachage 2-universelles. La famille retenue est celle des add-multiply-shift qui permet d'obtenir une fonction de hachage très rapidement\newline
+Cette famille est définie dans une classe, de sorte à pouvoir créer une nouvelle instance dès qu'il faut utiliser une nouvelle fonction de hachage randomisée
+
+\begin{lstlisting}
+ class Hash:
+    def __init__(self, w, M):
+        self.w = w
+        self.M = M
+        self.a = random.randint(1, 1 << (w-1)) - 1
+        self.b = random.randint(1, 1 << (w-M)) - 1
+        
+    def __call__(self, x):
+        return (((2*self.a-1)*x+self.b) % (1 << self.w)) // (1 << (self.w-self.M))
+\end{lstlisting}
+
+\subsection{Standardisation des flux parsés}
+
+\paragraph{}Nous avonc créé une fonction makestandard qui force transforme les information extraite au moment du parsage (``chaines de caractéres'') en des données numériques exploitables.\newline
+A chaque chaine de caractére de la liste parsée, on associe un numéro, de sorte à pourvoir traiter le probléme On arrete aussi le parsage au 25000 premières lignes.
+
+\begin{attention}
+ Si deux lignes possédent les mêmes caractéres sur un champ particulier, elles porteront la même étiquette puisqu'on parlera de la valeur
+\end{attention}
+
+\section{Analyse numérique}
+
+\subsection{Analyse préliminaire}
+
+\paragraph{}Une analyse numérique préliminaire donne les résultats suivants:
+
+\begin{tabularx}{\textwidth}{|l|l|X|}
+      \hline X & distinct(X) & maxfreq(X) \\ \hline
+      epahttp & 1318 & 243  \\ \hline
+      sdschttp & 75 & 12710 \\ \hline
+      calgary & 4 & 16380  \\ \hline
+\end{tabularx}
+
+\paragraph{}Par la suite on supposera donc travailler sur des flux dont les éléments sortent d'un univers de taille 1318
+
+\begin{tabularx}{\textwidth}{|l|l|X|}
+      \hline X & Y & cod(X,Y) \\ \hline
+      epahttp & sdschttp & -185 \\ \hline
+      sdschttp & calgary & 177646 \\ \hline
+      epahttp & calgary & -254  \\ \hline
+\end{tabularx}
+
+\subsection{Analyse sur le CM-sketch}
+
+\paragraph{Evaluation sur 20 essais}Une première évaluation des résultats sur 20 évaluation CM-sketch sont regroupées dans le tableau ci-dessous 
+(avec k = 16, $\delta$ = 0.0001 ou 0.0000001).\newline
+On note que même si les résultats sont assez éloignés des valeurs réelles (ce qui était attendu), la ``topologie'',  l'allure de la situation est préservée (position relative des résultats)
+
+\begin{tabularx}{\textwidth}{|l|l|X|X|}
+      \hline X & Y & Moyenne CM\_sketch(X,Y, 16, 0.0001) 20 essais & Ecart type CM\_sketch(X,Y, 16, 0.0001) 20 essais \\ \hline
+      epahttp & sdschttp & -248344 & 116404 \\ \hline
+      sdschttp & calgary & 12311366 & 55424 \\ \hline
+      epahttp & calgary & -369948  & 114896 \\ \hline
+\end{tabularx}
+
+\paragraph{Evaluation sur 100 mesures}Une évaluation plus fine a été effectuée avec 100 essais, k = 64. On notera déjà que les estimations sont bien plus 
+proches de la réalité car k est plus proche de la taille de l'univers
+(une évaluation en k= 1318 donne d'ailleurs les valeurs de codéviance exacte). Nous avons cherché à observer l'effet d'une diminution du $\delta$, 
+censée augmenter la précision. Nous avons constaté une nette diminution de l'écart type.
+
+\begin{tabularx}{\textwidth}{|l|l|X|X|X|}
+      \hline X & Y & Moyenne CM\_sketch(X,Y, 64, 0.0001) 100 essais & Ecart type CM\_sketch(X,Y, 64, 0.0001) 100 essais & Ecart type CM\_sketch(X,Y, 64, 0.000001) 100 essais\\ \hline
+      epahttp & sdschttp & -34199 & 17683 & 15939\\ \hline
+      sdschttp & calgary & 3513236 & 670 & 325\\ \hline
+      epahttp & calgary & -45931  & 22742 & 19680\\ \hline
+\end{tabularx}
+
+\begin{remarque}
+ Une implémentation de l'algorithme distribué est proposée dans le code, bien qu'aucune application numérique n'en a été faite. 
+
+\end{remarque}
+
+\section{Conclusion}
+
+En conclusion, l'algorithme d'approximation permet de minimiser le temps de calcul de la codéviance approchée, avec une influence des paramétres sur l'écart type confirmée par nos observations sur machine.
+
+\end{document}

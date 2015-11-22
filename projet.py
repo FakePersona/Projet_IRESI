@@ -73,17 +73,18 @@ def sketch_cod(X, Y, k, delta):
         min_cod = min(min_cod, cod_int(sX, sY))
     return min_cod
 
-#Another version not using the h_split auxiliary function
+#Another version not using the h_split auxiliary function, which allows us to use two separate hash functions for X and Y
 def sketch_cod2(X, Y, k, delta):
     min_cod = float('inf')
     t = int(math.log(1/delta)) + 1
     for _ in range(t):
-        h = hash_rand.Hash(32, int(math.log(k,2)))
+        h1 = hash_rand.Hash(32, int(math.log(k,2)))
+        h2 = hash_rand.Hash(32, int(math.log(k,2)))
         X1 = [0 for i in range(k)]     # We will need to work on frequency vectors
         Y1 = [0 for i in range(k)]
         for i in range(len(X)):
-            X1[h(X[i])]+=1
-            Y1[h(Y[i])]+=1
+            X1[h1(X[i])]+=1
+            Y1[h2(Y[i])]+=1
         min_cod = min(min_cod, cod_int(X1, Y1))
     return min_cod
 
@@ -191,6 +192,6 @@ sample2 = make_standard(data2, "host", 25000)
 sample3 = make_standard(data3, "host", 25000)
 
 
-print(avg([sketch_cod2(sample1, sample3, 64, 0.0001) for i in range(100)]))
+print(ecart([sketch_cod2(sample1, sample3, 64, 0.0001) for i in range(100)]))
 #print(count_min([sample1,sample2,sample3],0.000001,1024,25000))
 
