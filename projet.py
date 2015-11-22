@@ -10,7 +10,7 @@ import parser
 def avg(X):
     return sum_array(X)/len(X)
 
-# Return the biggest element of a function
+# Returns the biggest element of a vector
 def maxi(l):
     max = 0
     for i in range(len(l)):
@@ -192,6 +192,8 @@ sample2 = make_standard(data2, "host", 25000)
 sample3 = make_standard(data3, "host", 25000)
 
 
+print(ecart([sketch_cod2(sample1, sample2, 64, 0.0001) for i in range(100)]))
 print(ecart([sketch_cod2(sample1, sample3, 64, 0.0001) for i in range(100)]))
+print(ecart([sketch_cod2(sample2, sample3, 64, 0.0001) for i in range(100)]))
 #print(count_min([sample1,sample2,sample3],0.000001,1024,25000))
 

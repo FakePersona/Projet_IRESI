@@ -103,7 +103,7 @@ def parseString(string, t):
 # data[42].group("D")
 
 def parseFile(path, t):
-    f = open(path)
+    f = open(path, encoding = "ISO-8859-1")
     data = []
     for line in f:
         data.append(parseString(line, t))

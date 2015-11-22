@@ -1,7 +1,7 @@
 \documentclass[a4paper,11pt]{article}%
 \usepackage{a4wide}%
 
-\usepackage[francais]{babel}%
+%\usepackage[francais]{babel}%
 \usepackage[utf8]{inputenc}%
 \usepackage[T1]{fontenc}%
 
@@ -59,7 +59,7 @@
 \maketitle
 
 \begin{abstract}
-  Dans ce rapport, nous rendrons compte de l'implémentation en python de l'algorithme CM-sketch d'approximation de la codéviance, ainsi que de l'analyse statistique obtenue
+  Dans ce rapport, nous rendrons compte de l'implémentation en Python de l'algorithme CM-sketch d'approximation de la codéviance, ainsi que de l'analyse statistique obtenue
   en appliquant l'implémentation à un triplet de traces réelles.
 \begin{keywords}
   Codéviance; CM-sketch
@@ -71,17 +71,18 @@
 
 \subsection{Pourquoi Python?}
 
-\paragraph{Structure de liste/tableau}La structure de liste en python a la particularité de permettre directement l'accés à n'importe quel élément, ce qui permet une implémentation plus comfortable des vecteurs de fréquence.
-Inversement, on pourrait dire que les tableaux pythons ont une taille dynamique, ce qui est utile pour la ``standardisation'' de vecteurs.
+\paragraph{Simplicité}Tout d'abord, nous avons utilisé Python dans le but de fournir un code aussi clair et lisible que possible.
 
-\paragraph{Beaucoup de fonctions natives}Python posséde beaucoup de bibliothéques évitant d'avoir à implémenter nous même des fonctions comme le logarithme
+\paragraph{Structure de liste/tableau}La structure de liste en Python a la particularité de permettre directement l'accès à n'importe quel élément, ce qui permet une implémentation plus comfortable des vecteurs de fréquence.
+Inversement, on pourrait dire que les tableaux Python ont une taille dynamique, ce qui est utile pour la ``standardisation'' de vecteurs.
 
-\paragraph{Typage dynamique}Nous avons été ammenés à manipuler beaucoup de types différents, le typage python permet d'éviter des notations très lourde, ce qui aurait été le cas avec un langage fortement typé comme Ocaml.
+\paragraph{Beaucoup de fonctions natives}Python possède beaucoup de bibliothèques évitant d'avoir à implémenter nous même des fonctions comme le logarithme. Cela nous a également permis d'utiliser les expressions rationnelle de Python.
+
+\paragraph{Typage dynamique}Nous avons été ammenés à manipuler beaucoup de types différents, le typage de Python permet d'éviter des notations très lourdes, ce qui aurait été le cas avec un langage fortement typé comme Ocaml.
 
 \subsection{Parsage des traces}
 
-\paragraph{}En l'état, les traces fournies sont difficiles à exploiter puisqu'il s'agit de lignes de textes (ce sont des logs). De fait, nous avonc écrit une fonction de parsage\newline
-en tirant avantage du fait que python supporte la reconnaissance d'expressions rationnelles. Par exemple, le typage du protocole epahttp est fourni ci-dessous:
+\paragraph{}En l'état, les traces fournies sont difficiles à exploiter puisqu'il s'agit de lignes de textes (ce sont des logs). De fait, nous avons écrit une fonction de parsage en tirant avantage du fait que Python supporte la reconnaissance d'expressions rationnelles. Par exemple, le typage du protocole epahttp est fourni ci-dessous:
 
 \begin{lstlisting}
 pattern["epahttp"] = re.compile("""
@@ -103,13 +104,12 @@ pattern["epahttp"] = re.compile("""
 """, re.VERBOSE)
 \end{lstlisting}
 
-\paragraph{}A partir de cette définition, on peut poser une fonction parseFile qui crée un vecteur qui découpe chaque ligne en différents blocs correspondant à une information différente. Nous nous sommes interessé dans ce document\newline
-à l'adresse hôte (``host'')
+\paragraph{}A partir de cette définition, on peut poser une fonction parseFile qui crée un vecteur qui découpe chaque ligne en différents blocs correspondant à une information différente. Nous nous sommes interessé dans ce document à l'adresse hôte (``host'')
 
 \subsection{Fonction de hachage 2-Universelle}
 
-\paragraph{}Il est nécessaire d'avoir une famille de fonctions de hachage 2-universelles. La famille retenue est celle des add-multiply-shift qui permet d'obtenir une fonction de hachage très rapidement\newline
-Cette famille est définie dans une classe, de sorte à pouvoir créer une nouvelle instance dès qu'il faut utiliser une nouvelle fonction de hachage randomisée
+\paragraph{}Il est nécessaire d'avoir une famille de fonctions de hachage 2-universelles. La famille retenue est celle des add-multiply-shift qui permet d'obtenir une fonction de hachage très rapidement.\newline
+Cette famille est définie dans une classe, de sorte à pouvoir créer une nouvelle instance dès qu'il faut utiliser une nouvelle fonction de hachage aléatoire :
 
 \begin{lstlisting}
  class Hash:
@@ -125,11 +125,11 @@ Cette famille est définie dans une classe, de sorte à pouvoir créer une nouve
 
 \subsection{Standardisation des flux parsés}
 
-\paragraph{}Nous avonc créé une fonction makestandard qui force transforme les information extraite au moment du parsage (``chaines de caractéres'') en des données numériques exploitables.\newline
-A chaque chaine de caractére de la liste parsée, on associe un numéro, de sorte à pourvoir traiter le probléme On arrete aussi le parsage au 25000 premières lignes.
+\paragraph{}Nous avons créé une fonction makestandard qui transforme les informations extraites au moment du parsage (``chaines de caractères'') en des données numériques exploitables.\newline
+A chaque chaîne de caractère de la liste parsée, on associe un numéro, de sorte à pouvoir traiter le problème. On arrête aussi le parsage aux 25000 premières lignes. Cela n'a aucune influence sur l'algorithme, mais permet de réduire significativement le temps de calcul.
 
 \begin{attention}
- Si deux lignes possédent les mêmes caractéres sur un champ particulier, elles porteront la même étiquette puisqu'on parlera de la valeur
+ Si deux lignes possèdent les mêmes caractères sur un champ particulier, elles porteront la même étiquette puisqu'on parlera de la valeur.
 \end{attention}
 
 \section{Analyse numérique}
@@ -145,7 +145,7 @@ A chaque chaine de caractére de la liste parsée, on associe un numéro, de sor
       calgary & 4 & 16380  \\ \hline
 \end{tabularx}
 
-\paragraph{}Par la suite on supposera donc travailler sur des flux dont les éléments sortent d'un univers de taille 1318
+\paragraph{}Par la suite on supposera donc travailler sur des flux dont les éléments font partie d'un univers de taille 1318
 
 \begin{tabularx}{\textwidth}{|l|l|X|}
       \hline X & Y & cod(X,Y) \\ \hline
@@ -156,7 +156,7 @@ A chaque chaine de caractére de la liste parsée, on associe un numéro, de sor
 
 \subsection{Analyse sur le CM-sketch}
 
-\paragraph{Evaluation sur 20 essais}Une première évaluation des résultats sur 20 évaluation CM-sketch sont regroupées dans le tableau ci-dessous 
+\paragraph{Evaluation sur 20 essais}Une première évaluation des résultats sur 20 évaluations CM-sketch sont regroupées dans le tableau ci-dessous 
 (avec k = 16, $\delta$ = 0.0001 ou 0.0000001).\newline
 On note que même si les résultats sont assez éloignés des valeurs réelles (ce qui était attendu), la ``topologie'',  l'allure de la situation est préservée (position relative des résultats)
 
@@ -167,9 +167,9 @@ On note que même si les résultats sont assez éloignés des valeurs réelles (
       epahttp & calgary & -369948  & 114896 \\ \hline
 \end{tabularx}
 
-\paragraph{Evaluation sur 100 mesures}Une évaluation plus fine a été effectuée avec 100 essais, k = 64. On notera déjà que les estimations sont bien plus 
+\paragraph{Evaluation sur 100 mesures}Une évaluation plus fine a été effectuée avec 100 essais, k=64. On notera déjà que les estimations sont bien plus 
 proches de la réalité car k est plus proche de la taille de l'univers
-(une évaluation en k= 1318 donne d'ailleurs les valeurs de codéviance exacte). Nous avons cherché à observer l'effet d'une diminution du $\delta$, 
+(une évaluation en k=1318 donne d'ailleurs les valeurs de codéviance exacte). Nous avons cherché à observer l'effet d'une diminution du $\delta$, 
 censée augmenter la précision. Nous avons constaté une nette diminution de l'écart type.
 
 \begin{tabularx}{\textwidth}{|l|l|X|X|X|}
@@ -186,6 +186,6 @@ censée augmenter la précision. Nous avons constaté une nette diminution de l'
 
 \section{Conclusion}
 
-En conclusion, l'algorithme d'approximation permet de minimiser le temps de calcul de la codéviance approchée, avec une influence des paramétres sur l'écart type confirmée par nos observations sur machine.
+En conclusion, l'algorithme d'approximation permet de minimiser le temps de calcul de la codéviance approchée, avec une influence des paramètres sur l'écart type confirmée par nos observations sur machine. \newline Par ailleurs, il aurait été intéressant de réaliser de nombreux tests, par exemple en découpant les entrées par plages horaires.
 
 \end{document}
