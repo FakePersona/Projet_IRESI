@@ -1,0 +1,18 @@
+Projet IRESI, écrit par Rémi Hutin et Rémy Sun.
+
+Vous trouverez 8 fichiers dans cette archive :
+
+- rapport.pdf
+- projet.py
+- parser.py
+- rand_hash.py
+- 1epahttp.txt
+- 2sdschttp2.txt
+- 3Calgaryaccess_log.txt
+- et ce README.txt
+
+Le fichier .pdf contient notre compte-rendu. 
+Les fichiers .txt contiennent les logs fournis.
+Les fichiers .py contiennent le code source. Le code a été écrit avec le langage Python 3.
+Les fichier parser.py et rand_hash.py sont des modules. Le fichier à exécuter est projet.py, à l'aide de la commande :
+python3 projet.py
